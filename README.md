@@ -1,36 +1,154 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PUPPED
+
+A single-catalog ecommerce site for selling exclusive sneakers. Built with Next.js, Neon Postgres, and Cloudflare R2.
+
+## Features
+
+- Public catalog with product browsing and size filtering
+- Product detail pages with image galleries
+- Contact form (Instagram/WhatsApp) with email notifications
+- Admin area for product management (CRUD)
+- Image upload to Cloudflare R2
+- Responsive Apple-like design
+- Rate-limited admin authentication
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Database**: Neon Postgres with Drizzle ORM
+- **Storage**: Cloudflare R2 (S3-compatible)
+- **Email**: Nodemailer (SMTP)
+- **Auth**: Iron Session
+- **Styling**: Tailwind CSS
+- **Validation**: Zod
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- Neon Postgres database
+- Cloudflare R2 bucket
+- SMTP server for email notifications
+
+### Installation
+
+1. Clone the repository
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Copy the environment example file:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+4. Configure your environment variables (see below)
+
+5. Push the database schema:
+   ```bash
+   npm run db:push
+   ```
+
+6. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+7. Open [http://localhost:3000](http://localhost:3000)
+
+## Environment Variables
+
+### Required
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | Neon Postgres connection string |
+| `ADMIN_PASSWORD` | Password for admin access |
+| `SESSION_SECRET` | 32+ character secret for sessions |
+| `R2_ACCESS_KEY_ID` | Cloudflare R2 access key |
+| `R2_SECRET_ACCESS_KEY` | Cloudflare R2 secret key |
+| `R2_BUCKET_NAME` | R2 bucket name |
+| `R2_ENDPOINT` | R2 endpoint URL |
+| `R2_PUBLIC_URL` | Public URL for R2 bucket |
+| `NEXT_PUBLIC_R2_PUBLIC_URL` | Same as R2_PUBLIC_URL (for client) |
+
+### Email (Optional but recommended)
+
+| Variable | Description |
+|----------|-------------|
+| `SMTP_HOST` | SMTP server hostname |
+| `SMTP_PORT` | SMTP port (usually 587 or 465) |
+| `SMTP_USER` | SMTP username |
+| `SMTP_PASSWORD` | SMTP password |
+| `OWNER_EMAIL` | Email to receive notifications |
+
+## Database Commands
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Generate migration files
+npm run db:generate
+
+# Run migrations
+npm run db:migrate
+
+# Push schema directly (development)
+npm run db:push
+
+# Open Drizzle Studio
+npm run db:studio
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/
+├── app/
+│   ├── admin/           # Admin pages
+│   ├── api/             # API routes
+│   ├── product/         # Product detail pages
+│   └── page.tsx         # Home/catalog page
+├── components/
+│   ├── admin/           # Admin components
+│   ├── catalog/         # Public catalog components
+│   └── ui/              # Shared UI components
+└── lib/
+    ├── auth/            # Authentication utilities
+    ├── db/              # Database schema and connection
+    ├── email/           # Email sending utilities
+    └── r2/              # R2 storage utilities
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deployment
 
-## Learn More
+### Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Connect your repository to Vercel
+2. Add all environment variables in Vercel dashboard
+3. Deploy
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The database schema will be pushed automatically on first build if using `db:push` in the build command, or run migrations manually.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Admin Access
 
-## Deploy on Vercel
+Navigate to `/admin` and enter the password configured in `ADMIN_PASSWORD`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Features:
+- Dashboard with stats
+- Product management (create, edit, delete)
+- Image uploads
+- Contact submission management
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Security
+
+- Admin password stored in environment variable (not in database)
+- Rate limiting on login attempts (5 attempts per 15 minutes per IP)
+- Session-based authentication with HTTP-only cookies
+- Input validation with Zod on all API routes
+- Image validation (type and size limits)
+
+## License
+
+Private
