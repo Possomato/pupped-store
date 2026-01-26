@@ -4,7 +4,7 @@ A single-catalog ecommerce site for selling exclusive sneakers. Built with Next.
 
 ## Features
 
-- Public catalog with product browsing and size filterin
+- Public catalog with product browsing and size filtering
 - Product detail pages with image galleries
 - Contact form (Instagram/WhatsApp) with email notifications
 - Admin area for product management (CRUD)
