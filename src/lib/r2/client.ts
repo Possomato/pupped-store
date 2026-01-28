@@ -25,7 +25,8 @@ export interface UploadResult {
 export async function uploadImage(
   file: Buffer,
   originalName: string,
-  mimeType: string
+  mimeType: string,
+  prefix: string = "products"
 ): Promise<UploadResult> {
   if (!ALLOWED_TYPES.includes(mimeType)) {
     throw new Error(
@@ -38,7 +39,7 @@ export async function uploadImage(
   }
 
   const extension = originalName.split(".").pop() || "jpg";
-  const key = `products/${randomUUID()}.${extension}`;
+  const key = `${prefix}/${randomUUID()}.${extension}`;
 
   await s3Client.send(
     new PutObjectCommand({

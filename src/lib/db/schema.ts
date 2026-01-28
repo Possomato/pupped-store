@@ -9,6 +9,27 @@ import {
   jsonb,
 } from "drizzle-orm/pg-core";
 
+// General images table for article cover images
+export const images = pgTable("images", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  r2Key: text("r2_key").notNull(),
+  originalName: text("original_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  size: integer("size").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const articles = pgTable("articles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  coverImageId: uuid("cover_image_id").references(() => images.id),
+  body: text("body").notNull(),
+  published: boolean("published").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const products = pgTable("products", {
   id: uuid("id").primaryKey().defaultRandom(),
   title: text("title").notNull(),
@@ -16,6 +37,7 @@ export const products = pgTable("products", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   sizes: jsonb("sizes").$type<number[]>().notNull().default([]),
   isActive: boolean("is_active").notNull().default(true),
+  articleId: uuid("article_id").references(() => articles.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -52,6 +74,10 @@ export const loginAttempts = pgTable("login_attempts", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export type Image = typeof images.$inferSelect;
+export type NewImage = typeof images.$inferInsert;
+export type Article = typeof articles.$inferSelect;
+export type NewArticle = typeof articles.$inferInsert;
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
 export type ProductImage = typeof productImages.$inferSelect;

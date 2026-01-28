@@ -12,6 +12,7 @@ const updateProductSchema = z.object({
   price: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
   sizes: z.array(z.number().int().positive()).optional(),
   isActive: z.boolean().optional(),
+  articleId: z.string().uuid().nullable().optional(),
 });
 
 export async function GET(

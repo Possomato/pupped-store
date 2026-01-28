@@ -11,6 +11,7 @@ const productSchema = z.object({
   price: z.string().regex(/^\d+(\.\d{1,2})?$/),
   sizes: z.array(z.number().int().positive()),
   isActive: z.boolean().optional().default(true),
+  articleId: z.string().uuid().nullable().optional(),
 });
 
 export async function GET() {
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
         price: validatedData.price,
         sizes: validatedData.sizes,
         isActive: validatedData.isActive,
+        articleId: validatedData.articleId ?? null,
       })
       .returning();
 

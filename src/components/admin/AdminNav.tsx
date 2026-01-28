@@ -14,8 +14,9 @@ export default function AdminNav() {
   };
 
   const navItems = [
-    { href: "/admin", label: "Dashboard" },
+    { href: "/admin", label: "Dashboard", exact: true },
     { href: "/admin/products", label: "Products" },
+    { href: "/admin/articles", label: "Articles" },
     { href: "/admin/submissions", label: "Submissions" },
   ];
 
@@ -37,19 +38,24 @@ export default function AdminNav() {
           </div>
 
           <div className="flex items-center space-x-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`text-sm font-medium transition ${
-                  pathname === item.href
-                    ? "text-gray-900"
-                    : "text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = item.exact
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`text-sm font-medium transition ${
+                    isActive
+                      ? "text-gray-900"
+                      : "text-gray-500 hover:text-gray-900"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
             <button
               onClick={handleLogout}
               className="text-sm font-medium text-gray-500 hover:text-gray-900 transition"

@@ -3,11 +3,12 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { products, productImages } from "@/lib/db/schema";
+import { products, productImages, articles, images } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import Header from "@/components/catalog/Header";
 import ImageGallery from "@/components/catalog/ImageGallery";
 import ContactForm from "@/components/catalog/ContactForm";
+import ArticlePreview from "@/components/catalog/ArticlePreview";
 
 export async function generateMetadata({
   params,
@@ -43,11 +44,32 @@ export default async function ProductPage({
     notFound();
   }
 
-  const images = await db
+  const productImagesData = await db
     .select()
     .from(productImages)
     .where(eq(productImages.productId, id))
     .orderBy(productImages.sortOrder);
+
+  // Fetch linked article if exists
+  let linkedArticle = null;
+  if (product.articleId) {
+    const [article] = await db
+      .select()
+      .from(articles)
+      .where(eq(articles.id, product.articleId));
+
+    if (article && article.published) {
+      let coverImage = null;
+      if (article.coverImageId) {
+        const [img] = await db
+          .select()
+          .from(images)
+          .where(eq(images.id, article.coverImageId));
+        coverImage = img || null;
+      }
+      linkedArticle = { ...article, coverImage };
+    }
+  }
 
   const sizes = product.sizes as number[];
   const r2PublicUrl = process.env.R2_PUBLIC_URL || "";
@@ -80,7 +102,7 @@ export default async function ProductPage({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
           <div>
             <ImageGallery
-              images={images}
+              images={productImagesData}
               productTitle={product.title}
               r2PublicUrl={r2PublicUrl}
             />
@@ -110,6 +132,10 @@ export default async function ProductPage({
                   ))}
                 </div>
               </div>
+            )}
+
+            {linkedArticle && (
+              <ArticlePreview article={linkedArticle} />
             )}
 
             <div>

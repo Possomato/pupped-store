@@ -2,16 +2,17 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Product, ProductImage } from "@/lib/db/schema";
+import { Product, ProductImage, Article } from "@/lib/db/schema";
 
 interface ProductFormProps {
   product?: Product & { images: ProductImage[] };
+  articles?: Article[];
   mode: "create" | "edit";
 }
 
 const COMMON_SIZES = [36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46];
 
-export default function ProductForm({ product, mode }: ProductFormProps) {
+export default function ProductForm({ product, articles = [], mode }: ProductFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -24,6 +25,7 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
     (product?.sizes as number[]) || []
   );
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
+  const [articleId, setArticleId] = useState<string | null>(product?.articleId || null);
   const [images, setImages] = useState<
     Array<{ id: string; url: string; r2Key: string }>
   >(
@@ -110,6 +112,7 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
       price,
       sizes,
       isActive,
+      articleId,
     };
 
     try {
@@ -255,6 +258,29 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
             Product is active (visible in catalog)
           </label>
         </div>
+
+        {articles.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Related Article
+            </label>
+            <select
+              value={articleId || ""}
+              onChange={(e) => setArticleId(e.target.value || null)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none bg-white"
+            >
+              <option value="">None</option>
+              {articles.map((article) => (
+                <option key={article.id} value={article.id}>
+                  {article.title}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              Link a history article to show on this product&apos;s page
+            </p>
+          </div>
+        )}
       </div>
 
       {mode === "edit" && (
