@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
+import TiptapImage from "@tiptap/extension-image";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+import { Extension } from "@tiptap/core";
 import { Article, Image } from "@/lib/db/schema";
 
 interface ArticleFormProps {
@@ -121,6 +124,128 @@ function MenuBar({ editor }: { editor: ReturnType<typeof useEditor> }) {
   );
 }
 
+function createImageUploadPlugin() {
+  return Extension.create({
+    name: "imageUpload",
+
+    addProseMirrorPlugins() {
+      const uploadAndInsert = async (
+        file: File,
+        view: Parameters<NonNullable<import("@tiptap/pm/view").EditorProps["handleDrop"]>>[0],
+        pos: number
+      ) => {
+        // Insert placeholder
+        const placeholderText = "Uploading image...";
+        const { schema } = view.state;
+        const placeholder = schema.nodes.paragraph.create(
+          null,
+          schema.text(placeholderText)
+        );
+        const tr = view.state.tr.insert(pos, placeholder);
+        view.dispatch(tr);
+
+        try {
+          const formData = new FormData();
+          formData.append("image", file);
+          const res = await fetch("/api/articles/images", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || "Upload failed");
+          }
+
+          const { url } = await res.json();
+
+          // Find and replace the placeholder
+          let placeholderPos: number | null = null;
+          view.state.doc.descendants((node, nodePos) => {
+            if (
+              placeholderPos === null &&
+              node.isText &&
+              node.text === placeholderText
+            ) {
+              placeholderPos = nodePos;
+            }
+          });
+
+          if (placeholderPos !== null) {
+            const parentPos = view.state.doc.resolve(placeholderPos).before(1);
+            const imageNode = schema.nodes.image.create({ src: url });
+            const replaceTr = view.state.tr.replaceWith(
+              parentPos,
+              parentPos + placeholder.nodeSize,
+              imageNode
+            );
+            view.dispatch(replaceTr);
+          }
+        } catch {
+          // Remove placeholder on failure
+          let placeholderPos: number | null = null;
+          view.state.doc.descendants((node, nodePos) => {
+            if (
+              placeholderPos === null &&
+              node.isText &&
+              node.text === placeholderText
+            ) {
+              placeholderPos = nodePos;
+            }
+          });
+
+          if (placeholderPos !== null) {
+            const parentPos = view.state.doc.resolve(placeholderPos).before(1);
+            const deleteTr = view.state.tr.delete(
+              parentPos,
+              parentPos + placeholder.nodeSize
+            );
+            view.dispatch(deleteTr);
+          }
+        }
+      };
+
+      return [
+        new Plugin({
+          key: new PluginKey("imageUpload"),
+          props: {
+            handleDrop(view, event) {
+              const files = event.dataTransfer?.files;
+              if (!files || files.length === 0) return false;
+
+              const imageFile = Array.from(files).find((f) =>
+                f.type.startsWith("image/")
+              );
+              if (!imageFile) return false;
+
+              event.preventDefault();
+              const pos = view.posAtCoords({
+                left: event.clientX,
+                top: event.clientY,
+              });
+              uploadAndInsert(imageFile, view, pos?.pos ?? view.state.selection.from);
+              return true;
+            },
+            handlePaste(view, event) {
+              const files = event.clipboardData?.files;
+              if (!files || files.length === 0) return false;
+
+              const imageFile = Array.from(files).find((f) =>
+                f.type.startsWith("image/")
+              );
+              if (!imageFile) return false;
+
+              event.preventDefault();
+              uploadAndInsert(imageFile, view, view.state.selection.from);
+              return true;
+            },
+          },
+        }),
+      ];
+    },
+  });
+}
+
 export default function ArticleForm({ article, mode }: ArticleFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -143,6 +268,8 @@ export default function ArticleForm({ article, mode }: ArticleFormProps) {
       Link.configure({
         openOnClick: false,
       }),
+      TiptapImage,
+      createImageUploadPlugin(),
     ],
     content: article?.body || "",
     editorProps: {
@@ -259,6 +386,18 @@ export default function ArticleForm({ article, mode }: ArticleFormProps) {
   };
 
   return (
+    <>
+    <style>{`
+      .ProseMirror img {
+        display: block;
+        width: 80%;
+        max-width: 80%;
+        margin: 1.5rem auto;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        border-radius: 0.5rem;
+      }
+    `}</style>
     <form onSubmit={handleSubmit} className="space-y-8">
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
@@ -419,5 +558,6 @@ export default function ArticleForm({ article, mode }: ArticleFormProps) {
         </div>
       </div>
     </form>
+    </>
   );
 }
