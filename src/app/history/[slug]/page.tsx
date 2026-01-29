@@ -58,6 +58,17 @@ export default async function ArticlePage({
 
   return (
     <div className="min-h-screen bg-white">
+      <style>{`
+        .article-body img {
+          display: block;
+          width: 80%;
+          max-width: 80%;
+          margin: 1.5rem auto;
+          aspect-ratio: 16 / 9;
+          object-fit: cover;
+          border-radius: 0.5rem;
+        }
+      `}</style>
       <Header />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -96,7 +107,7 @@ export default async function ArticlePage({
         </h1>
 
         <article
-          className="prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-gray-900 prose-a:underline"
+          className="article-body prose prose-lg max-w-none prose-headings:font-semibold prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-gray-900 prose-a:underline"
           dangerouslySetInnerHTML={{ __html: article.body }}
         />
       </main>
