@@ -15,6 +15,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.975.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@tiptap/extension-image": "^3.18.0",
     "@tiptap/extension-link": "^3.17.1",
     "@tiptap/react": "^3.17.1",
     "@tiptap/starter-kit": "^3.17.1",
